@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Evaluacion2</string>
+
+    /*TODO EL TEXTO TRADUCIDO AL INGLES*/
+
+    <string name="msg_alerta_titulo">Information</string>
+
+    <string name="nombre_main">LIST OF PRODUCTS</string>
+    <string name="msg_agregar">The product has been added to the cart.</string>
+    <string name="msg_quitar">The product has been removed from the basket.</string>
+    <string name="msg_eliminar">The product has been removed.</string>
+    <string name="reg_btn_reg_main">REGISTER PRODUCT</string>
+
+    <string name="reg_btn_reg">Register</string>
+    <string name="reg_ing_nombre">Enter name</string>
+    <string name="reg_btn_lista">PRODUCT LIST</string>
+    <string name="msg_reg_prod">The product was successfully registered, it will be redirected to the product list.</string>
+
+
+    <!-- Strings used for fragments for navigation -->
+    <string name="first_fragment_label">First Fragment</string>
+    <string name="second_fragment_label">Second Fragment</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+
+
+
+</resources>

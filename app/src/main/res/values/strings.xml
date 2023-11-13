@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">Evaluacion2</string>
+
+    <string name="msg_alerta_titulo">Información</string>
+
+    <string name="nombre_main">LISTA DE PRODUCTOS</string>
+    <string name="msg_agregar">El producto ha agregado a la cesta.</string>
+    <string name="msg_quitar">El producto ha quitado de la cesta.</string>
+    <string name="msg_eliminar">El producto se ha eliminado.</string>
+    <string name="reg_btn_reg_main">REGISTRAR PRODUCTO</string>
+
+    <string name="reg_btn_reg">Registrar</string>
+    <string name="reg_ing_nombre">Ingresar nombre</string>
+    <string name="reg_btn_lista">LISTA PRODUCTOS</string>
+    <string name="msg_reg_prod">El producto se registro correctamente, será redireccionado a la lista de productos.</string>
+
+
+
+
+    <!-- Strings used for fragments for navigation -->
+    <string name="first_fragment_label">First Fragment</string>
+    <string name="second_fragment_label">Second Fragment</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+</resources>
