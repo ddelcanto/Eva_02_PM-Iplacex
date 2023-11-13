@@ -4,8 +4,8 @@
     <string name="msg_alerta_titulo">Información</string>
 
     <string name="nombre_main">LISTA DE PRODUCTOS</string>
-    <string name="msg_agregar">El producto ha agregado a la cesta.</string>
-    <string name="msg_quitar">El producto ha quitado de la cesta.</string>
+    <string name="msg_agregar">El producto se ha agregado a la cesta.</string>
+    <string name="msg_quitar">El producto se ha quitado de la cesta.</string>
     <string name="msg_eliminar">El producto se ha eliminado.</string>
     <string name="reg_btn_reg_main">REGISTRAR PRODUCTO</string>
 
