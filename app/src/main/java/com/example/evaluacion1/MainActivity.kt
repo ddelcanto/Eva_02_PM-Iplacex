@@ -46,21 +46,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.compose.ui.res.stringResource
 
-
 class MainActivity : ComponentActivity() {
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-
-
         lifecycleScope.launch(Dispatchers.IO){
-
             /*Obtengo los valores desde SQLite, en el caso de no tener alguno se agregan 4 de forma predeterminada*/
-
             val productoDao = ProductoDatabase.getInstance(this@MainActivity).productoDao()
-
             if (productoDao.contar() < 1 ) {
                 productoDao.insertar( Producto( 1, "Nintendo SNES", 0 ))
                 productoDao.insertar( Producto( 2, "Nintendo NES", 0 ))
@@ -68,11 +61,9 @@ class MainActivity : ComponentActivity() {
                 productoDao.insertar( Producto( 4, "Nintendo 64", 0 ))
             }
         }
-
         setContent {
             //Llamo al GUI principal
             ListaProductosUI()
-
         }
     }
 }
@@ -90,7 +81,6 @@ fun ListaProductosUI(){
             setProductos(dao.getAll())
         }
     }
-
     /*
     * En la ROW siguiente se setea la configuracion visual y se inserta una imagen
     * desde DRAWABLE.
@@ -98,7 +88,6 @@ fun ListaProductosUI(){
     *
     * */
     Row(
-
     ){
         Column(
             modifier = Modifier.fillMaxSize().padding(30.dp),
@@ -112,7 +101,6 @@ fun ListaProductosUI(){
                 modifier = Modifier.fillMaxWidth().padding(30.dp)
             )
         }
-
     }
     Row(){
         LazyColumn(
@@ -127,7 +115,6 @@ fun ListaProductosUI(){
             }
         }
     }
-
     /* Boton para direccionar a la vista de registro de un nuevo producto
     * Se utiliza stringResource para llamar al recurso String correspondiente.
     * */
@@ -166,7 +153,6 @@ fun ProductoItemUI(producto:Producto, guardar:() -> Unit){
                 tint = Color.Green,
                 modifier = Modifier.clickable {
                     alcanceCorr.launch(Dispatchers.IO){
-
                         /*En el siguiente codigo se setea el valor a la variable y se procede a
                         * grabar en la BD obteniendo la instancia basado en el contexto actual.
                         * En la misma linea llamamos a la clase productoDao e invocamos el metodo actualizar,
@@ -195,7 +181,6 @@ fun ProductoItemUI(producto:Producto, guardar:() -> Unit){
                         * a este se le pasa el objeto PRODUCTO*/
                         producto.comprado = 1
                         ProductoDatabase.getInstance( contexto ).productoDao().actualizar(producto)
-                        // Aca cambiamos al hilo principal para actualizar la UI.
                         withContext(Dispatchers.Main) {
                             /*Se llama a la funcion que genera el ALERT, se le pasan los parametros correspondientes*/
                             dialogoInformacionMain(contexto, msg_agregar, msg_alerta_titulo)
