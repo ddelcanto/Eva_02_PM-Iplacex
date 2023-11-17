@@ -92,7 +92,7 @@ dependencies {
     // If you want to additionally add CameraX ML Kit Vision Integration
     //implementation("androidx.camera:camera-mlkit-vision:${camerax_version}")
     // If you want to additionally use the CameraX Extensions library
-    ///implementation("androidx.camera:camera-extensions:${camerax_version}")
+    implementation("androidx.camera:camera-extensions:${camerax_version}")
 
 
     //VIEW MODEL COMPOSE
