@@ -128,6 +128,13 @@ fun ListaProductosUI(){
         }){
             Text(text = stringResource(R.string.reg_btn_reg_main))
         }
+
+        Button(onClick={
+            contexto.startActivity(Intent(contexto, RegistrarFoto::class.java))
+        }){
+            Text(text ="IR A REGISTRAR FOTOS")
+        }
+
     }
 }
 
