@@ -1,12 +1,11 @@
 package com.example.evaluacion1
 
-import android.app.Activity
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
@@ -126,13 +125,14 @@ fun PantallaFormUI(){
         Button(onClick = {
             appVM.PantallaActual.value = Pantalla.CAMARA
         }) {
-            Text("Capturar Foto")
+            Text("ir a Capturar Foto")
         }
         formularioVM.foto.value?.let{
             Image(
                 painter= BitmapPainter(uri2Image(it, contexto)),
                 contentDescription = "Imagen tomada por CameraX"
             )
+            dialogoInformacionFoto(contexto, it.toString(), "")
         }
 
     }
@@ -148,7 +148,6 @@ fun CrearImagenPrivada(contexto:Context):File = File(
     contexto.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
     UUID.randomUUID().toString()+".jpg"
 )
-
 
 fun CapturarFoto(cameraCtl: LifecycleCameraController,
                  archivo: File,
@@ -199,12 +198,21 @@ fun PantallaCamaraUI(lanzadorPermisos:ActivityResultLauncher<Array<String>>,
                 formularioVM.foto.value = it
                 appVM.PantallaActual.value = Pantalla.FORM
             }
+
         }) {
             Text("Capturar Foto")
         }
     }
 
+
 }
+
+
+
+    // ... tus otros métodos y variables ...
+
+
+
 
 fun dialogoInformacionFoto(contexto: Context, msgInfo: String, titulo: String ) {
     val builder = AlertDialog.Builder(contexto)
