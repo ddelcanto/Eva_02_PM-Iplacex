@@ -3,6 +3,7 @@ package com.example.evaluacion1
 import android.app.Activity
 import android.content.ContentValues
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -15,6 +16,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCapture.OnImageSavedCallback
@@ -154,6 +156,8 @@ fun CapturarFoto(cameraCtl: LifecycleCameraController,
                  onImagenGuardar:(uri:Uri)-> Unit
 ){
     val opciones = OutputFileOptions.Builder(archivo).build()
+
+    //dialogoInformacionFoto(contexto, contexto.getExternalFilesDir(Environment.DIRECTORY_PICTURES).toString(),"")
     cameraCtl.takePicture(
         opciones,
         ContextCompat.getMainExecutor(contexto),
@@ -200,4 +204,16 @@ fun PantallaCamaraUI(lanzadorPermisos:ActivityResultLauncher<Array<String>>,
         }
     }
 
+}
+
+fun dialogoInformacionFoto(contexto: Context, msgInfo: String, titulo: String ) {
+    val builder = AlertDialog.Builder(contexto)
+    builder.setTitle(titulo)
+    builder.setMessage(msgInfo)
+    builder.setPositiveButton("OK") { dialog, which ->
+        contexto.startActivity(Intent(contexto, MainActivity::class.java)) /* REDIRECCIONAMOS a la vista de LISTA PRODUCTOS*/
+    }
+    builder.setCancelable(false)
+
+    builder.show()
 }
