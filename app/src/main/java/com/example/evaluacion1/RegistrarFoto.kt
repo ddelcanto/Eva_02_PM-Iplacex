@@ -2,13 +2,11 @@ package com.example.evaluacion1
 
 import android.content.ContentValues
 import android.content.Context
-import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.provider.MediaStore
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -23,7 +21,6 @@ import androidx.camera.core.ImageCapture.OutputFileOptions
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Button
@@ -31,8 +28,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
@@ -40,6 +35,27 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import java.io.File
 import java.util.UUID
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import java.io.InputStream
 
 enum class Pantalla {
     FORM,
@@ -128,20 +144,69 @@ fun PantallaFormUI(){
             Text("ir a Capturar Foto")
         }
         formularioVM.foto.value?.let{
-            Image(
-                painter= BitmapPainter(uri2Image(it, contexto)),
-                contentDescription = "Imagen tomada por CameraX"
-            )
+            DisplayImagesFromDirectory(contexto)
             dialogoInformacionFoto(contexto, it.toString(), "")
         }
 
     }
 }
 
-fun uri2Image(uri:Uri, contexto:Context)= BitmapFactory.decodeStream(
-    contexto.contentResolver.openInputStream(uri)
-).asImageBitmap()
 
+
+@Composable
+fun DisplayImagesFromDirectory(contexto: Context) {
+    val imagesDirectory = contexto.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+    val imageFiles = imagesDirectory?.listFiles()?.toList() ?: listOf()
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    LazyColumn {
+        items(imageFiles) { file ->
+            val imageUri = Uri.fromFile(file)
+            val imageBitmap = uri2Image(Uri.fromFile(file), contexto).asImageBitmap()
+            Image(
+                painter = BitmapPainter(imageBitmap),
+                contentDescription = "Imagen tomada por CameraX",
+                modifier = Modifier
+
+                    .clickable { selectedImageUri = imageUri }
+            )
+        }
+    }
+
+    selectedImageUri?.let { uri ->
+        val fullScreenBitmap = uri2Image(uri, contexto)?.asImageBitmap()
+        fullScreenBitmap?.let { bitmap ->
+           Dialog(onDismissRequest = { selectedImageUri = null }) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Image(
+                        painter = BitmapPainter(bitmap),
+                        contentDescription = "Imagen en pantalla completa",
+                        modifier = Modifier
+                            .fillMaxSize().graphicsLayer {
+                            rotationZ = 90f
+                            }
+                            .requiredSize(width = 400.dp, height = 150.dp),
+                        contentScale = ContentScale.FillBounds // Ajustar la imagen a la pantalla sin distorsionar
+                    )
+                }
+            }
+        }
+    }
+
+}
+fun uri2Image(uri: Uri, contexto: Context): Bitmap {
+    val contentResolver = contexto.contentResolver
+    var inputStream: InputStream? = null
+    var bitmap: Bitmap? = null
+    try {
+        inputStream = contentResolver.openInputStream(uri)
+        bitmap = BitmapFactory.decodeStream(inputStream)
+    } catch (e: Exception) {
+        e.printStackTrace()
+    } finally {
+        inputStream?.close()
+    }
+    return bitmap!!
+}
 
 
 fun CrearImagenPrivada(contexto:Context):File = File(
@@ -209,17 +274,12 @@ fun PantallaCamaraUI(lanzadorPermisos:ActivityResultLauncher<Array<String>>,
 
 
 
-    // ... tus otros métodos y variables ...
-
-
-
-
 fun dialogoInformacionFoto(contexto: Context, msgInfo: String, titulo: String ) {
     val builder = AlertDialog.Builder(contexto)
     builder.setTitle(titulo)
     builder.setMessage(msgInfo)
     builder.setPositiveButton("OK") { dialog, which ->
-        contexto.startActivity(Intent(contexto, MainActivity::class.java)) /* REDIRECCIONAMOS a la vista de LISTA PRODUCTOS*/
+       // contexto.startActivity(Intent(contexto, MainActivity::class.java)) /* REDIRECCIONAMOS a la vista de LISTA PRODUCTOS*/
     }
     builder.setCancelable(false)
 
