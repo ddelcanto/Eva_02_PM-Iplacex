@@ -1,7 +1,7 @@
 package com.example.evaluacion1
 
-import android.content.ContentValues
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -35,26 +35,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import java.io.File
 import java.util.UUID
-
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.requiredSize
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.BitmapPainter
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.unit.dp
 import java.io.InputStream
 
 enum class Pantalla {
@@ -92,8 +83,6 @@ class RegistrarFoto : ComponentActivity() {
             if(it[android.Manifest.permission.CAMERA]?:false){
                 camaraVM.onPermisoCamaraOK()
             }
-
-
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -105,7 +94,6 @@ class RegistrarFoto : ComponentActivity() {
 
         setContent {
             AppUI(lanzadorPermisos, cameraCtl)
-
         }
     }
 }
@@ -124,7 +112,11 @@ fun AppUI(lanzadorPermisos:ActivityResultLauncher<Array<String>>,
         Pantalla.CAMARA ->{
             PantallaCamaraUI(lanzadorPermisos, cameraCtl)
         }
-
+/*
+        Pantalla.GPS ->{
+            PantallaGPSUI(lanzadorPermisos, cameraCtl)
+        }
+*/
     }
 
 }
@@ -137,27 +129,40 @@ fun PantallaFormUI(){
 
     val contexto = LocalContext.current
 
-    Column() {
-        Button(onClick = {
-            appVM.PantallaActual.value = Pantalla.CAMARA
-        }) {
-            Text("ir a Capturar Foto")
-        }
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally) {
         formularioVM.foto.value?.let{
             DisplayImagesFromDirectory(contexto)
-            dialogoInformacionFoto(contexto, it.toString(), "")
         }
-
     }
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Bottom,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ){
+        Button(onClick={
+            appVM.PantallaActual.value = Pantalla.CAMARA
+        }){
+            Text(text = "Abrir CAMAPA")
+        }
+        Button(onClick={
+            //appVM.PantallaActual.value = Pantalla.GPS
+        }){
+            Text(text = "Abrir GPS")
+        }
+    }
+
 }
-
-
 
 @Composable
 fun DisplayImagesFromDirectory(contexto: Context) {
+
     val imagesDirectory = contexto.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
     val imageFiles = imagesDirectory?.listFiles()?.toList() ?: listOf()
-    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+
     LazyColumn {
         items(imageFiles) { file ->
             val imageUri = Uri.fromFile(file)
@@ -166,33 +171,21 @@ fun DisplayImagesFromDirectory(contexto: Context) {
                 painter = BitmapPainter(imageBitmap),
                 contentDescription = "Imagen tomada por CameraX",
                 modifier = Modifier
-
-                    .clickable { selectedImageUri = imageUri }
+                    .clickable {
+                        val intent = Intent(contexto, VisorImagen::class.java)
+                        intent.putExtra("imageUri", imageUri)
+                        contexto.startActivity(intent)
+                    }
             )
+            Spacer(Modifier.height(20.dp))
         }
     }
 
-    selectedImageUri?.let { uri ->
-        val fullScreenBitmap = uri2Image(uri, contexto)?.asImageBitmap()
-        fullScreenBitmap?.let { bitmap ->
-           Dialog(onDismissRequest = { selectedImageUri = null }) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    Image(
-                        painter = BitmapPainter(bitmap),
-                        contentDescription = "Imagen en pantalla completa",
-                        modifier = Modifier
-                            .fillMaxSize().graphicsLayer {
-                            rotationZ = 90f
-                            }
-                            .requiredSize(width = 400.dp, height = 150.dp),
-                        contentScale = ContentScale.FillBounds // Ajustar la imagen a la pantalla sin distorsionar
-                    )
-                }
-            }
-        }
-    }
 
 }
+
+
+
 fun uri2Image(uri: Uri, contexto: Context): Bitmap {
     val contentResolver = contexto.contentResolver
     var inputStream: InputStream? = null
@@ -208,7 +201,6 @@ fun uri2Image(uri: Uri, contexto: Context): Bitmap {
     return bitmap!!
 }
 
-
 fun CrearImagenPrivada(contexto:Context):File = File(
     contexto.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
     UUID.randomUUID().toString()+".jpg"
@@ -221,7 +213,6 @@ fun CapturarFoto(cameraCtl: LifecycleCameraController,
 ){
     val opciones = OutputFileOptions.Builder(archivo).build()
 
-    //dialogoInformacionFoto(contexto, contexto.getExternalFilesDir(Environment.DIRECTORY_PICTURES).toString(),"")
     cameraCtl.takePicture(
         opciones,
         ContextCompat.getMainExecutor(contexto),
@@ -268,9 +259,14 @@ fun PantallaCamaraUI(lanzadorPermisos:ActivityResultLauncher<Array<String>>,
             Text("Capturar Foto")
         }
     }
-
-
 }
+
+
+/*GPS*/
+
+
+
+
 
 
 
