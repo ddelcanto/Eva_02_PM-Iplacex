@@ -106,9 +106,12 @@ class RegistrarFoto : ComponentActivity() {
 
 
         setContent {
-            intent.getStringExtra("nombre")?.let {
-                AppUI(lanzadorPermisos, cameraCtl, it)
-            }
+            val nombre = intent.getStringExtra("nombre")!!
+            val latitud = intent.getStringExtra("latitud")!!
+            val longitud = intent.getStringExtra("longitud")!!
+
+            AppUI(lanzadorPermisos, cameraCtl, nombre, latitud, longitud)
+
         }
     }
 }
@@ -116,15 +119,18 @@ class RegistrarFoto : ComponentActivity() {
 @Composable
 fun AppUI(lanzadorPermisos:ActivityResultLauncher<Array<String>>,
           cameraCtl:LifecycleCameraController,
-          nombre:String){
+          nombre:String,
+          latitud:String,
+          longitud:String){
 
     val appVM:AppVM = viewModel()
 
     when(appVM.PantallaActual.value){
         Pantalla.FORM ->{
-            PantallaFormUI(nombre)
+            PantallaFormUI(nombre, latitud, longitud)
         }
         Pantalla.CAMARA ->{
+
            PantallaCamaraUI(lanzadorPermisos, cameraCtl)
         }
 
@@ -134,12 +140,12 @@ fun AppUI(lanzadorPermisos:ActivityResultLauncher<Array<String>>,
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PantallaFormUI(nombre:String){
+fun PantallaFormUI(nombre:String, latitud:String, longitud:String){
 
     val appVM:AppVM = viewModel()
     val (nombreLocacion, setNombreLocacion) = remember { mutableStateOf("") }
-    val (latitud, setLatitud) = remember { mutableStateOf("") }
-    val (longitud, setLongitud) = remember { mutableStateOf("") }
+    val (latitud_, setLatitud) = remember { mutableStateOf("") }
+    val (longitud_, setLongitud) = remember { mutableStateOf("") }
 
     val contexto = LocalContext.current
 
@@ -176,7 +182,12 @@ fun PantallaFormUI(nombre:String){
             }
 
             Button(onClick={
-                contexto.startActivity(Intent(contexto, ObtenerUbicacion::class.java))
+                val intent = Intent(contexto, ObtenerUbicacion::class.java)
+                intent.putExtra("nombre", nombre)
+                intent.putExtra("latitud", latitud)
+                intent.putExtra("longitud", longitud)
+                contexto.startActivity(intent)
+                //contexto.startActivity(Intent(contexto, ObtenerUbicacion::class.java))
             }){
                 Text(text = "Abrir GPS")
             }
@@ -302,7 +313,7 @@ fun CapturarFoto(cameraCtl: LifecycleCameraController,
 ) {
     // Creamos el nombre de archivo utilizando un formato de fecha y hora para evitar duplicados
     val filename = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date()) + ".jpg"
-    dialogoInformacionFoto(contexto,filename, "" )
+
     val contentValues = ContentValues().apply {
         put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
         put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")

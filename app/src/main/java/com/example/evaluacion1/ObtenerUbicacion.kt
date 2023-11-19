@@ -73,7 +73,14 @@ class ObtenerUbicacion : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            PantallaGpsUI(gpsVM, lanzadorPermisos)
+
+            val nombre = intent.getStringExtra("nombre")!!
+            val latitud = intent.getStringExtra("latitud")!!
+            val longitud = intent.getStringExtra("longitud")!!
+
+            PantallaGpsUI(gpsVM, lanzadorPermisos, nombre )
+
+
         }
     }
 }
@@ -81,7 +88,10 @@ class ObtenerUbicacion : ComponentActivity() {
 
 class FaltaPermisosSeguridad(mensaje:String): Exception(mensaje)
 @Composable
-fun PantallaGpsUI(gpsVM: GpsVM, lanzadorPermisos: ActivityResultLauncher<Array<String>>){
+fun PantallaGpsUI(gpsVM: GpsVM,
+                  lanzadorPermisos: ActivityResultLauncher<Array<String>>,
+                  nombre:String
+                 ){
 
     val contexto =  LocalContext.current
 
@@ -143,10 +153,13 @@ fun PantallaGpsUI(gpsVM: GpsVM, lanzadorPermisos: ActivityResultLauncher<Array<S
         horizontalAlignment = Alignment.CenterHorizontally
     ){
         Button(onClick = {
+
             val intent = Intent(contexto, RegistrarFoto::class.java)
-            intent.putExtra("nombre", "Valparaiso")
+            intent.putExtra("nombre", nombre)
+            intent.putExtra("latitud", gpsVM.latitud.value.toString())
+            intent.putExtra("longitud", gpsVM.longitud.value.toString())
             contexto.startActivity(intent)
-           // contexto.startActivity(Intent(contexto, RegistrarFoto::class.java))
+
 
         }) {
             Text(text = "Guardar ubicación")

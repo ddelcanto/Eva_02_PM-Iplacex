@@ -59,6 +59,8 @@ fun AppUI(){
 
             val intent = Intent(contexto, RegistrarFoto::class.java)
             intent.putExtra("nombre", nombreLocacion)
+            intent.putExtra("latitud", "Sin datos")
+            intent.putExtra("longitud", "Sin datos")
             contexto.startActivity(intent)
            // contexto.startActivity(Intent(contexto, RegistrarFoto::class.java))
         }){
