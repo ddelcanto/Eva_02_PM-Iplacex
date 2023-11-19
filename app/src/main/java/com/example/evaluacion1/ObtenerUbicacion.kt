@@ -132,11 +132,7 @@ fun PantallaGpsUI(gpsVM: GpsVM, lanzadorPermisos: ActivityResultLauncher<Array<S
                 it.overlays.add(marcador)
             }
         )
-
     }
-
-
-
 }
 
 

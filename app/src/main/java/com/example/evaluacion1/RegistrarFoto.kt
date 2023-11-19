@@ -1,5 +1,6 @@
 package com.example.evaluacion1
 
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -8,6 +9,7 @@ import android.location.Location
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
+import android.provider.MediaStore
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -40,10 +42,13 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.ComposeCompilerApi
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
@@ -51,6 +56,9 @@ import androidx.compose.ui.unit.dp
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import java.io.InputStream
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 enum class Pantalla {
     FORM,
@@ -68,7 +76,7 @@ class AppVM : ViewModel(){
 }
 
 class FormularioVM : ViewModel(){
-
+    val PantallaActual = mutableStateOf(Pantalla.FORM)
     val nombreLugar = mutableStateOf("")
     val foto = mutableStateOf<Uri?>(null)
 }
@@ -77,7 +85,6 @@ class FormularioVM : ViewModel(){
 class RegistrarFoto : ComponentActivity() {
 
     val camaraVM: AppVM by viewModels()
-
 
     lateinit var cameraCtl:LifecycleCameraController
 
@@ -107,15 +114,13 @@ fun AppUI(lanzadorPermisos:ActivityResultLauncher<Array<String>>,
           cameraCtl:LifecycleCameraController){
 
     val appVM:AppVM = viewModel()
-    val gpsVM : GpsVM = viewModel()
 
     when(appVM.PantallaActual.value){
         Pantalla.FORM ->{
             PantallaFormUI()
         }
-
         Pantalla.CAMARA ->{
-            PantallaCamaraUI(lanzadorPermisos, cameraCtl)
+           PantallaCamaraUI(lanzadorPermisos, cameraCtl)
         }
 
     }
@@ -127,7 +132,6 @@ fun PantallaFormUI(){
 
     val formularioVM: FormularioVM = viewModel()
     val appVM:AppVM = viewModel()
-    val gpsVM:GpsVM = viewModel()
 
     val contexto = LocalContext.current
 
@@ -135,9 +139,10 @@ fun PantallaFormUI(){
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally) {
-        formularioVM.foto.value?.let{
-            DisplayImagesFromDirectory(contexto)
-        }
+        //formularioVM.foto.value?.let{
+
+            DisplayPublicImages(contexto)
+       // }
     }
 
     Column(
@@ -160,6 +165,7 @@ fun PantallaFormUI(){
 
 }
 
+/*
 @Composable
 fun DisplayImagesFromDirectory(contexto: Context) {
 
@@ -186,6 +192,64 @@ fun DisplayImagesFromDirectory(contexto: Context) {
 
 
 }
+*/
+
+
+@Composable
+fun DisplayPublicImages(contexto: Context) {
+    val imageList = remember { mutableStateOf<List<Uri>>(listOf()) }
+
+    // Carga las imágenes cuando el Composable entra en la Composición
+    LaunchedEffect(key1 = true) {
+        imageList.value = queryImages(contexto)
+    }
+
+    LazyColumn {
+        items(imageList.value) { imageUri ->
+            val imageBitmap = uri2Image(imageUri, contexto).asImageBitmap()
+            Image(
+                painter = BitmapPainter(imageBitmap),
+                contentDescription = "Imagen de la galería pública",
+                modifier = Modifier
+                    .clickable {
+                        val intent = Intent(contexto, VisorImagen::class.java)
+                        intent.putExtra("imageUri", imageUri)
+                        contexto.startActivity(intent)
+                    }
+                    .fillMaxWidth()
+                    .height(200.dp) // Ajustar según sea necesario
+            )
+            Spacer(Modifier.height(20.dp))
+        }
+    }
+}
+
+// Función para consultar imágenes del almacenamiento público del dispositivo
+fun queryImages(contexto: Context): List<Uri> {
+    val imageUris = mutableListOf<Uri>()
+    val projection = arrayOf(MediaStore.Images.Media._ID)
+    val sortOrder = "${MediaStore.Images.Media.DATE_TAKEN} DESC"
+
+    contexto.contentResolver.query(
+        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+        projection,
+        null,
+        null,
+        sortOrder
+    )?.use { cursor ->
+        val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+
+        while (cursor.moveToNext()) {
+            val id = cursor.getLong(idColumn)
+            val contentUri = Uri.withAppendedPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id.toString())
+            imageUris.add(contentUri)
+        }
+    }
+
+    return imageUris
+}
+
+
 
 fun uri2Image(uri: Uri, contexto: Context): Bitmap {
     val contentResolver = contexto.contentResolver
@@ -207,6 +271,41 @@ fun CrearImagenPrivada(contexto:Context):File = File(
     UUID.randomUUID().toString()+".jpg"
 )
 
+fun CapturarFoto(cameraCtl: LifecycleCameraController,
+                 contexto: Context,
+                 onImagenGuardar:(uri:Uri)-> Unit
+) {
+    // Creamos el nombre de archivo utilizando un formato de fecha y hora para evitar duplicados
+    val filename = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date()) + ".jpg"
+    dialogoInformacionFoto(contexto,filename, "" )
+    val contentValues = ContentValues().apply {
+        put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
+        put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+        put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES) // Esta línea asegura que se guarde en la carpeta de imágenes públicas
+    }
+
+    val opciones = OutputFileOptions.Builder(contexto.contentResolver,
+        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+        contentValues).build()
+
+    cameraCtl.takePicture(
+        opciones,
+        ContextCompat.getMainExecutor(contexto),
+        object : OnImageSavedCallback {
+            override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
+                outputFileResults.savedUri?.let {
+                    onImagenGuardar(it)
+                }
+            }
+
+            override fun onError(exception: ImageCaptureException) {
+                Log.e("Error al capturar la foto", exception.message ?: "Error desconocido")
+            }
+        }
+    )
+}
+
+/*
 fun CapturarFoto(cameraCtl: LifecycleCameraController,
                  archivo: File,
                  contexto: Context,
@@ -230,7 +329,7 @@ fun CapturarFoto(cameraCtl: LifecycleCameraController,
         }
     )
 }
-
+*/
 @Composable
 fun PantallaCamaraUI(lanzadorPermisos:ActivityResultLauncher<Array<String>>,
                      cameraCtl:LifecycleCameraController){
@@ -251,25 +350,25 @@ fun PantallaCamaraUI(lanzadorPermisos:ActivityResultLauncher<Array<String>>,
     Column() {
         Button(onClick = {
 
+
+            CapturarFoto(cameraCtl, contexto) { uri ->
+                formularioVM.foto.value = uri
+                appVM.PantallaActual.value = Pantalla.FORM
+                // Aquí puedes hacer algo más con la URI de la imagen, como mostrarla en la UI.
+            }
+
+
+        /*
             CapturarFoto(cameraCtl, CrearImagenPrivada(contexto), contexto ){
                 formularioVM.foto.value = it
                 appVM.PantallaActual.value = Pantalla.FORM
             }
-
+        */
         }) {
             Text("Capturar Foto")
         }
     }
 }
-
-
-
-
-/*GPS*/
-
-
-
-
 
 
 
