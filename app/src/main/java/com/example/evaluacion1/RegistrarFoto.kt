@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.location.Location
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
@@ -42,10 +43,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.ComposeCompilerApi
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.unit.dp
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import java.io.InputStream
 
 enum class Pantalla {
@@ -73,7 +77,7 @@ class FormularioVM : ViewModel(){
 class RegistrarFoto : ComponentActivity() {
 
     val camaraVM: AppVM by viewModels()
-    val formularioVM: FormularioVM by viewModels()
+
 
     lateinit var cameraCtl:LifecycleCameraController
 
@@ -103,6 +107,7 @@ fun AppUI(lanzadorPermisos:ActivityResultLauncher<Array<String>>,
           cameraCtl:LifecycleCameraController){
 
     val appVM:AppVM = viewModel()
+    val gpsVM : GpsVM = viewModel()
 
     when(appVM.PantallaActual.value){
         Pantalla.FORM ->{
@@ -112,11 +117,7 @@ fun AppUI(lanzadorPermisos:ActivityResultLauncher<Array<String>>,
         Pantalla.CAMARA ->{
             PantallaCamaraUI(lanzadorPermisos, cameraCtl)
         }
-/*
-        Pantalla.GPS ->{
-            PantallaGPSUI(lanzadorPermisos, cameraCtl)
-        }
-*/
+
     }
 
 }
@@ -126,6 +127,7 @@ fun PantallaFormUI(){
 
     val formularioVM: FormularioVM = viewModel()
     val appVM:AppVM = viewModel()
+    val gpsVM:GpsVM = viewModel()
 
     val contexto = LocalContext.current
 
@@ -146,10 +148,11 @@ fun PantallaFormUI(){
         Button(onClick={
             appVM.PantallaActual.value = Pantalla.CAMARA
         }){
-            Text(text = "Abrir CAMAPA")
+            Text(text = "Abrir CAMARA")
         }
+
         Button(onClick={
-            //appVM.PantallaActual.value = Pantalla.GPS
+            contexto.startActivity(Intent(contexto, ObtenerUbicacion::class.java))
         }){
             Text(text = "Abrir GPS")
         }
@@ -183,8 +186,6 @@ fun DisplayImagesFromDirectory(contexto: Context) {
 
 
 }
-
-
 
 fun uri2Image(uri: Uri, contexto: Context): Bitmap {
     val contentResolver = contexto.contentResolver
@@ -262,7 +263,10 @@ fun PantallaCamaraUI(lanzadorPermisos:ActivityResultLauncher<Array<String>>,
 }
 
 
+
+
 /*GPS*/
+
 
 
 
