@@ -345,16 +345,3 @@ fun PantallaCamaraUI(lanzadorPermisos:ActivityResultLauncher<Array<String>>,
         }
     }
 }
-
-
-
-/*Dialogo para mostrar mensajes*/
-fun dialogoInformacionFoto(contexto: Context, msgInfo: String, titulo: String ) {
-    val builder = AlertDialog.Builder(contexto)
-    builder.setTitle(titulo)
-    builder.setMessage(msgInfo)
-    builder.setPositiveButton("OK") { dialog, which ->
-    }
-    builder.setCancelable(false)
-    builder.show()
-}
