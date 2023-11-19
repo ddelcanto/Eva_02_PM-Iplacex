@@ -46,12 +46,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.ComposeCompilerApi
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
@@ -76,8 +79,6 @@ class AppVM : ViewModel(){
 }
 
 class FormularioVM : ViewModel(){
-    val PantallaActual = mutableStateOf(Pantalla.FORM)
-    val nombreLugar = mutableStateOf("")
     val foto = mutableStateOf<Uri?>(null)
 }
 
@@ -103,21 +104,25 @@ class RegistrarFoto : ComponentActivity() {
         cameraCtl.bindToLifecycle(this)
         cameraCtl.cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
 
+
         setContent {
-            AppUI(lanzadorPermisos, cameraCtl)
+            intent.getStringExtra("nombre")?.let {
+                AppUI(lanzadorPermisos, cameraCtl, it)
+            }
         }
     }
 }
 
 @Composable
 fun AppUI(lanzadorPermisos:ActivityResultLauncher<Array<String>>,
-          cameraCtl:LifecycleCameraController){
+          cameraCtl:LifecycleCameraController,
+          nombre:String){
 
     val appVM:AppVM = viewModel()
 
     when(appVM.PantallaActual.value){
         Pantalla.FORM ->{
-            PantallaFormUI()
+            PantallaFormUI(nombre)
         }
         Pantalla.CAMARA ->{
            PantallaCamaraUI(lanzadorPermisos, cameraCtl)
@@ -127,11 +132,14 @@ fun AppUI(lanzadorPermisos:ActivityResultLauncher<Array<String>>,
 
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PantallaFormUI(){
+fun PantallaFormUI(nombre:String){
 
-    val formularioVM: FormularioVM = viewModel()
     val appVM:AppVM = viewModel()
+    val (nombreLocacion, setNombreLocacion) = remember { mutableStateOf("") }
+    val (latitud, setLatitud) = remember { mutableStateOf("") }
+    val (longitud, setLongitud) = remember { mutableStateOf("") }
 
     val contexto = LocalContext.current
 
@@ -139,28 +147,50 @@ fun PantallaFormUI(){
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally) {
-        //formularioVM.foto.value?.let{
+            Spacer(modifier =  Modifier.height(30.dp))
+            TextField(
+                value = nombre,
+                onValueChange = setNombreLocacion,
+                readOnly = true,
+                label = { Text(text = "Nombre del lugar") }
+            )
+            Spacer(modifier =  Modifier.height(5.dp))
+            TextField(
+                value = latitud,
+                onValueChange = setLatitud,
+                readOnly = true,
+                label = { Text(text = "Latitud") }
+            )
+            Spacer(modifier =  Modifier.height(5.dp))
+            TextField(
+                value = longitud,
+                onValueChange = setLongitud,
+                readOnly = true,
+                label = { Text(text = "Longitud") }
+            )
+            Spacer(modifier =  Modifier.height(5.dp))
+            Button(onClick={
+                appVM.PantallaActual.value = Pantalla.CAMARA
+            }){
+                Text(text = "Abrir CAMARA")
+            }
 
+            Button(onClick={
+                contexto.startActivity(Intent(contexto, ObtenerUbicacion::class.java))
+            }){
+                Text(text = "Abrir GPS")
+            }
+            Spacer(modifier =  Modifier.height(10.dp))
             DisplayPublicImages(contexto)
-       // }
-    }
+        }
 
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Bottom,
         horizontalAlignment = Alignment.CenterHorizontally
     ){
-        Button(onClick={
-            appVM.PantallaActual.value = Pantalla.CAMARA
-        }){
-            Text(text = "Abrir CAMARA")
-        }
 
-        Button(onClick={
-            contexto.startActivity(Intent(contexto, ObtenerUbicacion::class.java))
-        }){
-            Text(text = "Abrir GPS")
-        }
+
     }
 
 }
@@ -266,11 +296,6 @@ fun uri2Image(uri: Uri, contexto: Context): Bitmap {
     return bitmap!!
 }
 
-fun CrearImagenPrivada(contexto:Context):File = File(
-    contexto.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
-    UUID.randomUUID().toString()+".jpg"
-)
-
 fun CapturarFoto(cameraCtl: LifecycleCameraController,
                  contexto: Context,
                  onImagenGuardar:(uri:Uri)-> Unit
@@ -304,32 +329,6 @@ fun CapturarFoto(cameraCtl: LifecycleCameraController,
         }
     )
 }
-
-/*
-fun CapturarFoto(cameraCtl: LifecycleCameraController,
-                 archivo: File,
-                 contexto: Context,
-                 onImagenGuardar:(uri:Uri)-> Unit
-){
-    val opciones = OutputFileOptions.Builder(archivo).build()
-
-    cameraCtl.takePicture(
-        opciones,
-        ContextCompat.getMainExecutor(contexto),
-        object: OnImageSavedCallback{
-            override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                outputFileResults.savedUri?.let{
-                    onImagenGuardar(it)
-                }
-            }
-            override fun onError(exception: ImageCaptureException) {
-                Log.e("Error al capturar la foto :(", exception.message?:"Error")
-            }
-
-        }
-    )
-}
-*/
 @Composable
 fun PantallaCamaraUI(lanzadorPermisos:ActivityResultLauncher<Array<String>>,
                      cameraCtl:LifecycleCameraController){

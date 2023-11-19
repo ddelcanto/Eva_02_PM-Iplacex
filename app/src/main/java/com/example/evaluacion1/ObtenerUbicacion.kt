@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.location.Location
+import android.net.Uri
 import android.os.Bundle
 import android.text.Spannable.Factory
 import androidx.activity.ComponentActivity
@@ -17,7 +18,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
+import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -25,7 +29,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -63,10 +69,7 @@ class ObtenerUbicacion : ComponentActivity() {
             gpsVM.permisoUbicacionOK()
         }
     }
-    /*
-    * Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-    * */
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -84,15 +87,14 @@ fun PantallaGpsUI(gpsVM: GpsVM, lanzadorPermisos: ActivityResultLauncher<Array<S
 
     Column(
         modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Bottom,
         horizontalAlignment = Alignment.CenterHorizontally
-    ){
+    ) {
         Spacer(Modifier.height(20.dp))
         Button(onClick = {
-            gpsVM.permisoUbicacionOK={
+            gpsVM.permisoUbicacionOK = {
 
-                obtenerUbicacion(contexto ){
-                    gpsVM.latitud.value  = it.latitude
+                obtenerUbicacion(contexto) {
+                    gpsVM.latitud.value = it.latitude
                     gpsVM.longitud.value = it.longitude
                 }
 
@@ -108,9 +110,10 @@ fun PantallaGpsUI(gpsVM: GpsVM, lanzadorPermisos: ActivityResultLauncher<Array<S
         }) {
             Text("OBTENER UBICACIÓN")
         }
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(5.dp))
         Text("Latitud : ${gpsVM.latitud.value}  -- Longitud : ${gpsVM.longitud.value}")
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(50.dp))
+
         AndroidView(
             factory = {
                 MapView(it).apply{
@@ -132,6 +135,22 @@ fun PantallaGpsUI(gpsVM: GpsVM, lanzadorPermisos: ActivityResultLauncher<Array<S
                 it.overlays.add(marcador)
             }
         )
+        Spacer(Modifier.height(50.dp))
+    }
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Bottom,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ){
+        Button(onClick = {
+            val intent = Intent(contexto, RegistrarFoto::class.java)
+            intent.putExtra("nombre", "Valparaiso")
+            contexto.startActivity(intent)
+           // contexto.startActivity(Intent(contexto, RegistrarFoto::class.java))
+
+        }) {
+            Text(text = "Guardar ubicación")
+        }
     }
 }
 
