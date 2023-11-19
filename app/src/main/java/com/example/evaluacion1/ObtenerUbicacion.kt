@@ -4,40 +4,27 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.location.Location
-import android.net.Uri
 import android.os.Bundle
-import android.text.Spannable.Factory
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.camera.view.LifecycleCameraController
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
-import androidx.compose.material3.Divider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.evaluacion1.ui.theme.Evaluacion1Theme
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -74,11 +61,12 @@ class ObtenerUbicacion : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
 
+            /*Se obtienen los datos que vienen desde la vista anterior*/
             val nombre = intent.getStringExtra("nombre")!!
             val latitud = intent.getStringExtra("latitud")!!
             val longitud = intent.getStringExtra("longitud")!!
 
-            PantallaGpsUI(gpsVM, lanzadorPermisos, nombre )
+            PantallaGpsUI(gpsVM, lanzadorPermisos, nombre, latitud, longitud )
 
 
         }
@@ -90,10 +78,21 @@ class FaltaPermisosSeguridad(mensaje:String): Exception(mensaje)
 @Composable
 fun PantallaGpsUI(gpsVM: GpsVM,
                   lanzadorPermisos: ActivityResultLauncher<Array<String>>,
-                  nombre:String
+                  nombre:String,
+                  latitud:String,
+                  longitud:String
                  ){
 
     val contexto =  LocalContext.current
+
+    /* En el caso de que los datos proporcionados por la vista anterior sean distintos a 'Sin datos',
+    * Se cargan directamente en las variables del componente del mapa */
+    if(latitud !="Sin datos"){
+        gpsVM.latitud.value = latitud.toDouble()
+    }
+    if(longitud !="Sin datos"){
+        gpsVM.longitud.value = longitud.toDouble()
+    }
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -101,13 +100,12 @@ fun PantallaGpsUI(gpsVM: GpsVM,
     ) {
         Spacer(Modifier.height(20.dp))
         Button(onClick = {
-            gpsVM.permisoUbicacionOK = {
 
+            gpsVM.permisoUbicacionOK = {
                 obtenerUbicacion(contexto) {
                     gpsVM.latitud.value = it.latitude
                     gpsVM.longitud.value = it.longitude
                 }
-
             }
 
             lanzadorPermisos.launch(
@@ -123,7 +121,6 @@ fun PantallaGpsUI(gpsVM: GpsVM,
         Spacer(Modifier.height(5.dp))
         Text("Latitud : ${gpsVM.latitud.value}  -- Longitud : ${gpsVM.longitud.value}")
         Spacer(Modifier.height(50.dp))
-
         AndroidView(
             factory = {
                 MapView(it).apply{
@@ -153,13 +150,12 @@ fun PantallaGpsUI(gpsVM: GpsVM,
         horizontalAlignment = Alignment.CenterHorizontally
     ){
         Button(onClick = {
-
+            /* Al guardar imagen se redirecciona a la vista principal de registro y muestra de imagenes*/
             val intent = Intent(contexto, RegistrarFoto::class.java)
             intent.putExtra("nombre", nombre)
             intent.putExtra("latitud", gpsVM.latitud.value.toString())
             intent.putExtra("longitud", gpsVM.longitud.value.toString())
             contexto.startActivity(intent)
-
 
         }) {
             Text(text = "Guardar ubicación")

@@ -19,9 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat.startActivity
 
 class MainActivity : ComponentActivity() {
 
@@ -57,12 +55,12 @@ fun AppUI(){
         Spacer(modifier =  Modifier.height(30.dp))
         Button(onClick={
 
+            //Le paso valores por INTENT para que se vean al cargar RegistrarFoto.kt
             val intent = Intent(contexto, RegistrarFoto::class.java)
             intent.putExtra("nombre", nombreLocacion)
             intent.putExtra("latitud", "Sin datos")
             intent.putExtra("longitud", "Sin datos")
             contexto.startActivity(intent)
-           // contexto.startActivity(Intent(contexto, RegistrarFoto::class.java))
         }){
             Text(text ="REGISTRAR VACACIONES")
         }
